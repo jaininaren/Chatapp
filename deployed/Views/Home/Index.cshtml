@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatapp</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <style>
+        .primaryCont, .secondaryCont {
+            position: absolute;
+            height: 335px;
+            width: 300px;
+            border: 2px solid blue;
+            bottom: 15px;
+            left: 10px;
+        }
+
+        .secondaryCont {
+            left: auto;
+            right: 10px;
+        }
+
+        .msgContainer {
+            padding: 5px 10px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+        .msgContainer p{
+
+            display: inline-block;
+             width: 100%;
+        }
+   
+
+        .formContainer {
+            position: absolute;
+            bottom: 0;
+            height: auto;
+            border-top: 1px solid blue;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        p {
+            padding: 0;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .typing {
+            color: grey;
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .inputMsg {
+            height: 30px;
+            width: 80%;
+            float: left;
+            display: inline-block;
+            box-sizing: border-box;
+        }
+
+        .sendButton {
+            background-color: blue;
+            color: white;
+            padding: 3px 6px;
+            display: inline-block;
+            float: left;
+            box-sizing: border-box;
+            width: 56px;
+            height: 30px
+        }
+
+        h3 {
+            background: blue;
+            padding: 5px 10px;
+            color: white;
+            margin: 0;
+        }
+
+        .primaryCont .smsPrimary, 
+        .secondaryCont .smsSecondary{
+            background-color: lightgrey; 
+            border: 1px solid black;
+            float: left;  
+            border-radius: 3px; 
+            clear:both;  
+            padding: 5px 10px;    
+            text-align: left; 
+            max-width: 70%;
+        }
+        
+        .secondaryCont .smsPrimary,
+        .primaryCont .smsSecondary{
+            clear: both;
+            background-color: aliceblue; 
+            border: 1px solid black;
+            float: right;  
+            border-radius: 3px;
+            padding: 5px 10px; 
+            text-align: right;
+            max-width: 70%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class='primaryCont'>
+        <h3 class='firstUser'>Welcome, <span></span></h3>
+        <div class='msgContainer'>
+            <p class='msgContainertext'></p>
+            <p class='typing'></p>
+        </div>
+        <form  class='formContainer'>
+            <input type='hidden' name="userName" id='userOne' value='Guest1' />
+            <input name='sendMsgText' class='inputMsg' type='text' value=""/>
+            <input name='submit' type='submit' class='sendButton' value='Send' />
+        </form>
+    </div>
+    <div class='secondaryCont'>
+        <h3 class='secondUser'>Welcome, <span></span></h3>
+        <div class='msgContainer'>
+            <p class='msgContainertext'></p>
+            <p class='typing'></p>
+        </div>
+        <form class='formContainer'>
+            <input type='hidden' name="userName" id='userTwo' value='Guest2' />
+            <input name='sendMsgText' class='inputMsg' type='text' value='' />
+            <input name='submit' type='submit' class='sendButton' value='Send' />
+        </form>
+    </div>	
+
+    <script type="text/javascript">
+        $(function(){   
+
+        /*Getting the chat users using promts*/         
+            var firstUser = prompt('enter firstUser name..'),
+                secondUser = prompt('enter secondUser name..');
+
+        /*declaring functions*/
+            var getUserNames = null;
+            var typingComment = null;
+
+         /* Event to send/write the text msg to server and retrive the same */    
+
+            $(".sendButton").click(function(event) {
+                event.preventDefault();            
+                var userName = $(this).siblings($('input[name=userName]')).val(),            
+                    msgfiled = $(this).siblings('.inputMsg'),
+                    textMsg = msgfiled.val();
+
+              /*ajax call to do the send fucntionality*/  
+                $.ajax({
+                   url: "/Home/SaveText",
+                    type: "GET",
+                    data: { s: textMsg, id: userName},
+                    success: function(data) { /*callback function to retrive the data from the file and display in view*/
+                        if (data !== '') {
+                            var smsClass = (firstUser == userName) ? 'smsPrimary' : 'smsSecondary';
+                            $('.msgContainertext').append("<p><span class="+smsClass+"><b>" + userName + "</b> : " + data + "</span></p>");                            
+                        }
+
+                        /*Function to achieve scroll functionality*/
+                        $('.msgContainertext').each(function(){
+                            this.parentNode.scrollTop = this.scrollHeight;
+                        });                       
+                    }
+                });
+                /*clearing the fields*/
+                msgfiled.val("");
+            });
+
+            /* function to set the usernames when they are empty  otherwise retrive from above promts*/
+            getUserNames = function(){
+
+                if(firstUser == '' || firstUser == null){   
+                    firstUser = 'Guest1';
+                }
+                if(secondUser == '' || secondUser == null){
+                    secondUser = 'Guest2';
+                }  
+
+                $('#userOne').val(firstUser);
+                $('#userTwo').val(secondUser); 
+
+                $('.firstUser span').html(firstUser);
+                $('.secondUser span').html(secondUser);
+                   
+            }
+
+            /*Function to display typing msg when user is kept focus on the fields*/
+            typingComment = function(){
+                $('.inputMsg').on('focusin', function(){
+                    var userName = $(this).siblings($('input[name=userName]')).val();
+                    if($(this).parents().hasClass('primaryCont')){
+                        $('.secondaryCont .typing').html('<span>' + userName + 'is typing </span>')
+                    }else{
+                         $('.primaryCont .typing').html('<span>' + userName + 'is typing </span>')
+                    }
+                        
+                });
+            /* focusout event to hide the typing msg when user is out of focus */    
+                $('.inputMsg').on('focusout', function(){
+                    $('.typing').html('');
+                });
+            }
+
+            /*Calling the fucntions on page load*/
+            typingComment();
+            getUserNames();     
+        }); 
+    </script>
+</body>
+</html>
