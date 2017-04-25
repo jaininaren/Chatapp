@@ -212,3 +212,33 @@
     </script>
 </body>
 </html>
+
+
+<!-- Backend code for controller action -just for ref
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace WebApplication1.Controllers
+{
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        public  ActionResult SaveText(string s, string id)
+        {
+            string path = AppDomain.CurrentDomain.BaseDirectory + "\\App_Data\\";
+           System.IO.StreamWriter sw = System.IO.File.AppendText(path + "data.txt");
+            sw.WriteLine(s);
+            sw.Close();
+            //string ss = $"{id} :  {s}";
+          return Content(s) ;
+        }
+    }
+} -->
